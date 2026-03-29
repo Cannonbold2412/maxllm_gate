@@ -1,24 +1,29 @@
-# MAXLLM
+# maxllm_gate
 
-> **Production-ready** intelligent LLM client with built-in rate limiting, smart routing, and distributed state support. Maximizes throughput and prevents 429 errors.
+> **Production-ready** intelligent LLM client with built-in rate limiting, smart routing, and distributed state support. Published on PyPI as `maxllm_gate`.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/yourusername/maxllm)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/Cannonbold2412/maxllm_gate)
 
 ## Overview
 
-**MAXLLM** is a production-ready LLM client that automatically manages rate limits across multiple API keys and providers. It works on top of [LiteLLM](https://github.com/BerriAI/litellm) as an intelligent scheduling and optimization layer.
+**maxllm_gate** is a production-ready LLM client that automatically manages rate limits across multiple API keys and providers. It works on top of [LiteLLM](https://github.com/BerriAI/litellm) as an intelligent scheduling and optimization layer.
+
+Install from PyPI with `maxllm_gate`. Import in Python with `from maxllm_gate import ...`.
 
 ```python
-from maxllm import MAXLLM
+from maxllm_gate import maxllm_gate
+import asyncio
 
-# Load config and go
-client = MAXLLM.from_config("config.yaml")
+async def main():
+    # Load config and go
+    async with maxllm_gate.from_config("config.yaml") as client:
+        # Use like OpenAI client - rate limiting is automatic
+        response = await client.chat("gpt-4o-mini", "Explain quantum computing")
+        print(response.content)
 
-# Use like OpenAI client - rate limiting is automatic
-response = client.chat("gpt-4o-mini", "Explain quantum computing")
-print(response.content)
+asyncio.run(main())
 ```
 
 ### What it does automatically:
@@ -27,7 +32,7 @@ print(response.content)
 - ✅ **Smart routing** - 4 strategies: least_utilized, round_robin, latency_aware, **balanced** (NEW)
 - ✅ **No 429 errors** - Defers requests when capacity exhausted instead of failing
 - ✅ **Auto-retry** - Exponential backoff on transient failures
-- ✅ **Streaming support** - Real async/sync streaming with proper token tracking
+- ✅ **Streaming support** - Async streaming with proper token tracking
 - ✅ **Input validation** - Pydantic models validate all inputs
 - ✅ **Graceful shutdown** - Context manager support with proper cleanup
 - ✅ **Production-ready** - Optional Redis backend for distributed state
@@ -36,19 +41,23 @@ print(response.content)
 
 ```bash
 # Base installation
-pip install maxllm
+pip install maxllm_gate
 
 # With YAML config support
-pip install maxllm[yaml]
+pip install maxllm_gate[yaml]
 
 # With Redis backend (for production/distributed deployments)
-pip install maxllm[redis]
+pip install maxllm_gate[redis]
 
 # With server mode (optional FastAPI gateway)
-pip install maxllm[server]
+pip install maxllm_gate[server]
 
 # Everything (recommended for production)
-pip install maxllm[all]
+pip install maxllm_gate[all]
+```
+
+```python
+from maxllm_gate import maxllm_gate
 ```
 
 ## Quick Start
@@ -76,41 +85,45 @@ keys:
 strategy: balanced  # NEW: Smart combined routing
 ```
 
-### 2. Use it
+### 2. Use it (Async-only)
 
 ```python
-from maxllm import MAXLLM
+from maxllm_gate import maxllm_gate
+import asyncio
 
-# Context manager ensures graceful shutdown
-with MAXLLM.from_config("config.yaml") as client:
-    # Simple chat
-    response = client.chat("gpt-4o-mini", "Hello!")
-    print(response.content)
-    
-    # With messages list
-    response = client.chat("mixtral-8x7b-32768", [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Write a haiku about Python."},
-    ])
-    
-    # Streaming
-    for chunk in client.chat_stream("gpt-4o-mini", "Tell me a story"):
-        print(chunk, end="", flush=True)
-    
-    # Check capacity and scores
-    print(client.capacity())
-    print(client.scores())  # See routing decisions
+async def main():
+    # Context manager ensures graceful shutdown
+    async with maxllm_gate.from_config("config.yaml") as client:
+        # Simple chat
+        response = await client.chat("gpt-4o-mini", "Hello!")
+        print(response.content)
+        
+        # With messages list
+        response = await client.chat("mixtral-8x7b-32768", [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Write a haiku about Python."},
+        ])
+        
+        # Streaming
+        async for chunk in client.chat_stream("gpt-4o-mini", "Tell me a story"):
+            print(chunk, end="", flush=True)
+        
+        # Check capacity and scores
+        print(client.capacity())
+        print(client.scores())  # See routing decisions
+
+asyncio.run(main())
 ```
 
-### Async Usage
+### Async Usage (Native)
 
 ```python
-from maxllm import MAXLLMAsync
+from maxllm_gate import maxllm_gate
 import asyncio
 
 async def main():
     # Async context manager
-    async with MAXLLMAsync.from_config("config.yaml") as client:
+    async with maxllm_gate.from_config("config.yaml") as client:
         # Single request
         response = await client.chat("gpt-4o-mini", "Hello!")
         print(response.content)
@@ -165,12 +178,12 @@ retry_max_delay: 60.0
 
 # Redis (optional - for production/distributed deployments)
 redis_url: "redis://localhost:6379"
-redis_prefix: "maxllm:"
+redis_prefix: "maxllm_gate:"
 ```
 
 ### Routing Strategies
 
-MAXLLM supports 4 routing strategies:
+maxllm_gate supports 4 routing strategies:
 
 | Strategy | Best For | How It Works |
 |----------|----------|--------------|
@@ -198,44 +211,21 @@ print(scores)
 # }
 ```
 
-### Inline Config
-
-```python
-from maxllm import MAXLLM
-
-client = MAXLLM(keys=[
-    {
-        "api_key": "gsk_...",
-        "provider": "groq",
-        "models": ["mixtral-8x7b-32768"],
-        "tpm_limit": 30000,
-        "rpm_limit": 30,
-    },
-    {
-        "api_key": "sk-...",
-        "provider": "openai", 
-        "models": ["gpt-4o-mini"],
-        "tpm_limit": 90000,
-        "rpm_limit": 500,
-    },
-])
-```
-
 ### Environment Variables
 
 ```bash
-export MAXLLM_KEYS='{
+export maxllm_gate_KEYS='{
   "groq-1": {"api_key": "gsk_...", "provider": "groq", "models": ["mixtral-8x7b-32768"], "tpm_limit": 30000, "rpm_limit": 30}
 }'
 
 # Then in Python
-from maxllm import MAXLLM
-client = MAXLLM.from_env()
+from maxllm_gate import maxllm_gate
+client = maxllm_gate.from_env()
 ```
 
 ## Supported Providers
 
-MAXLLM works with any provider supported by [LiteLLM](https://docs.litellm.ai/docs/providers):
+maxllm_gate works with any provider supported by [LiteLLM](https://docs.litellm.ai/docs/providers):
 
 | Provider | Config Name | Example Models |
 |----------|-------------|----------------|
@@ -277,12 +267,12 @@ keys:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Your Code                                │
-│   response = client.chat("gpt-4o-mini", "Hello!")               │
+│   response = await client.chat("gpt-4o-mini", "Hello!")         │
 └────────────────────────────────┬────────────────────────────────┘
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        MAXLLM Client                             │
+│                        maxllm_gate Client                             │
 │  1. Validate inputs (Pydantic)                                   │
 │  2. Estimate tokens needed (~50 tokens)                          │
 │  3. Select best key using routing strategy                       │
@@ -307,12 +297,12 @@ keys:
 
 #### 1. Deferred Execution (No 429 Errors)
 
-When ALL keys are at capacity, MAXLLM doesn't fail - it waits:
+When ALL keys are at capacity, maxllm_gate doesn't fail - it waits:
 
 ```python
 # If all keys exhausted, request is automatically deferred
 # until capacity is available (no 429 errors!)
-response = client.chat("gpt-4o-mini", "Hello")  # May wait, then succeeds
+response = await client.chat("gpt-4o-mini", "Hello")  # May wait, then succeeds
 ```
 
 #### 2. Input Validation
@@ -320,7 +310,7 @@ response = client.chat("gpt-4o-mini", "Hello")  # May wait, then succeeds
 All inputs are validated with Pydantic before execution:
 
 ```python
-from maxllm import validate_chat_request
+from maxllm_gate.validation import validate_chat_request
 
 # Manual validation
 request = validate_chat_request(
@@ -330,10 +320,10 @@ request = validate_chat_request(
 )
 
 # Automatic validation (default)
-response = client.chat("gpt-4", "Hello!", validate=True)  # ✅ Validated
+response = await client.chat("gpt-4", "Hello!", validate=True)  # ✅ Validated
 
 # Skip validation for performance (not recommended)
-response = client.chat("gpt-4", "Hello!", validate=False)
+response = await client.chat("gpt-4", "Hello!", validate=False)
 ```
 
 Validation checks:
@@ -349,24 +339,25 @@ Validation checks:
 Use context managers for automatic cleanup:
 
 ```python
-# Sync
-with MAXLLM.from_config("config.yaml") as client:
-    response = client.chat(...)
-# Waits for in-flight requests, then shuts down
-
-# Async
-async with MAXLLMAsync.from_config("config.yaml") as client:
+# Async (only mode supported)
+async with maxllm_gate.from_config("config.yaml") as client:
     response = await client.chat(...)
+# Waits for in-flight requests, then shuts down
 ```
 
 Or manual shutdown:
 
 ```python
-client = MAXLLM.from_config("config.yaml")
-try:
-    response = client.chat(...)
-finally:
-    client.shutdown(timeout=30)  # Wait max 30s for pending requests
+import asyncio
+
+async def main():
+    client = maxllm_gate.from_config("config.yaml")
+    try:
+        response = await client.chat(...)
+    finally:
+        await client.shutdown(timeout=30)  # Wait max 30s for pending requests
+
+asyncio.run(main())
 ```
 
 ## Production Deployment
@@ -376,13 +367,13 @@ finally:
 For distributed deployments or to persist rate limit state across restarts, use Redis:
 
 ```bash
-pip install maxllm[redis]
+pip install maxllm_gate[redis]
 ```
 
 ```yaml
 # config.yaml
 redis_url: "redis://localhost:6379"
-redis_prefix: "maxllm:"
+redis_prefix: "maxllm_gate:"
 
 keys:
   # ... your keys
@@ -397,7 +388,7 @@ keys:
 **Using HybridRateLimiter (auto-fallback):**
 
 ```python
-from maxllm.redis_backend import HybridRateLimiter
+from maxllm_gate.redis_backend import HybridRateLimiter
 import asyncio
 
 # Tries Redis, falls back to in-memory if unavailable
@@ -421,7 +412,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install maxllm[all]
+RUN pip install maxllm_gate[all]
 
 COPY config.yaml .
 COPY app.py .
@@ -433,7 +424,7 @@ CMD ["python", "app.py"]
 # docker-compose.yml
 version: '3.8'
 services:
-  maxllm:
+  maxllm_gate:
     build: .
     environment:
       - REDIS_URL=redis://redis:6379
@@ -452,9 +443,9 @@ volumes:
 ### Monitoring & Observability
 
 ```python
-from maxllm import MAXLLM
+from maxllm_gate import maxllm_gate
 
-client = MAXLLM.from_config("config.yaml")
+client = maxllm_gate.from_config("config.yaml")
 
 # Check capacity across all keys
 capacity = client.capacity()
@@ -495,7 +486,7 @@ def health_check():
 ### ChatResponse
 
 ```python
-response = client.chat("gpt-4o-mini", "Hello")
+response = await client.chat("gpt-4o-mini", "Hello")
 
 response.content       # The generated text
 response.model         # Model used
@@ -506,12 +497,12 @@ response.llm_latency   # LLM provider time only (NEW)
 response.key_used      # Which API key was used
 ```
 
-### MAXLLM Methods
+### maxllm_gate Methods
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `chat(model, messages, **kwargs)` | Sync chat completion | `ChatResponse` |
-| `chat_stream(model, messages, **kwargs)` | Streaming completion | `Generator[str]` |
+| `chat(model, messages, **kwargs)` | Async chat completion | `ChatResponse` |
+| `chat_stream(model, messages, **kwargs)` | Async streaming completion | `AsyncGenerator[str]` |
 | `add_key(api_key, provider, models, ...)` | Add key at runtime | `None` |
 | `status()` | Get scheduler status | `dict` |
 | `capacity()` | Get current capacity | `dict` |
@@ -519,25 +510,15 @@ response.key_used      # Which API key was used
 | `scores()` | Get routing scores (NEW) | `dict` |
 | `shutdown(timeout)` | Graceful shutdown (NEW) | `None` |
 
-### MAXLLMAsync Methods
-
-Same as `MAXLLM` but all methods are `async`:
-
-```python
-async with MAXLLMAsync.from_config("config.yaml") as client:
-    response = await client.chat(...)
-    
-    async for chunk in client.chat_stream(...):
-        print(chunk, end="")
-```
+All `maxllm_gate` methods are async and should be used with `await`.
 
 ### Configuration Classes
 
 ```python
-from maxllm import MAXLLMConfig, KeyConfig
+from maxllm_gate.config import maxllm_gate_config, KeyConfig
 
 # Programmatic config
-config = MAXLLMConfig(
+config = maxllm_gate_config(
     keys=[
         KeyConfig(
             api_key="sk-...",
@@ -551,13 +532,13 @@ config = MAXLLMConfig(
     max_retries=3,
 )
 
-client = MAXLLM(config=config)
+client = maxllm_gate(config=config)
 ```
 
 ### Validation
 
 ```python
-from maxllm import validate_chat_request, ChatRequest, ChatMessage
+from maxllm_gate.validation import validate_chat_request, ChatRequest, ChatMessage
 
 # Validate before sending
 request = validate_chat_request(
@@ -578,7 +559,7 @@ print(request.messages[0].role)  # "user"
 
 ```bash
 # Install dev dependencies
-pip install maxllm[dev]
+pip install maxllm_gate[dev]
 
 # Run all tests
 pytest
@@ -587,7 +568,7 @@ pytest
 pytest tests/test_sdk.py
 
 # With coverage report
-pytest --cov=maxllm --cov-report=html
+pytest --cov=maxllm_gate --cov-report=html
 
 # Run only SDK tests (fast, no server deps needed)
 pytest tests/test_sdk.py -v
@@ -616,16 +597,16 @@ See the [`examples/`](examples/) directory for more:
 
 ## Architecture
 
-MAXLLM is built as a scheduling layer **on top of** [LiteLLM](https://github.com/BerriAI/litellm):
+maxllm_gate is built as a scheduling layer **on top of** [LiteLLM](https://github.com/BerriAI/litellm):
 
 ```
 ┌──────────────────────────────────────────┐
-│            Your Application               │
+│            Your Application              │
 └────────────────┬─────────────────────────┘
                  │
                  ▼
 ┌──────────────────────────────────────────┐
-│          MAXLLM (Scheduler)              │
+│          maxllm_gate (Scheduler)         │
 │  • Rate limiting (token bucket)          │
 │  • Smart routing (4 strategies)          │
 │  • Queue management                      │
@@ -669,17 +650,17 @@ Contributions welcome! Please:
 
 ## FAQ
 
-**Q: Why use MAXLLM instead of calling LiteLLM directly?**
+**Q: Why use maxllm_gate instead of calling LiteLLM directly?**
 
-A: MAXLLM adds intelligent scheduling, rate limiting, and multi-key management. It prevents 429 errors and maximizes throughput across multiple keys/providers.
+A: maxllm_gate adds intelligent scheduling, rate limiting, and multi-key management. It prevents 429 errors and maximizes throughput across multiple keys/providers.
 
 **Q: Does this work with OpenAI's official client?**
 
-A: MAXLLM uses LiteLLM under the hood, which supports OpenAI and 100+ other providers. The API is similar but not identical to OpenAI's client.
+A: maxllm_gate uses LiteLLM under the hood, which supports OpenAI and 100+ other providers. The API is similar but not identical to OpenAI's client.
 
 **Q: What happens when all keys are rate limited?**
 
-A: MAXLLM automatically defers the request and waits for capacity to become available. No 429 errors!
+A: maxllm_gate automatically defers the request and waits for capacity to become available. No 429 errors!
 
 **Q: Can I use this in production?**
 
@@ -691,7 +672,7 @@ A: It combines utilization (40%), latency (35%), errors (15%), and freshness (10
 
 **Q: Do I need Redis?**
 
-A: No, Redis is optional. It's recommended for production/distributed deployments but MAXLLM works fine with in-memory state for single-instance deployments.
+A: No, Redis is optional. It's recommended for production/distributed deployments but maxllm_gate works fine with in-memory state for single-instance deployments.
 
 ## License
 
@@ -707,11 +688,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**MAXLLM v0.2.0** - Maximum LLM throughput with zero 429 errors.
+**maxllm_gate v0.2.0** - Maximum LLM throughput with zero 429 errors.
 
-[Documentation](https://github.com/yourusername/maxllm) • [Issues](https://github.com/yourusername/maxllm/issues) • [PyPI](https://pypi.org/project/maxllm/)
+[Documentation](https://github.com/Cannonbold2412/maxllm_gate) • [Issues](https://github.com/Cannonbold2412/maxllm_gate/issues) • [PyPI](https://pypi.org/project/maxllm-gate/)
 
-Made with ❤️ for the AI community
+Made for the AI community
 
 </div>
-# MAXLLM

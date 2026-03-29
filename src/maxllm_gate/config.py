@@ -1,4 +1,4 @@
-"""MAXLLM Configuration handling."""
+"""maxllm_gate Configuration handling."""
 
 import json
 import os
@@ -37,8 +37,8 @@ class KeyConfig:
 
 
 @dataclass
-class MAXLLMConfig:
-    """Main configuration for MAXLLM."""
+class maxllm_gate_config:
+    """Main configuration for maxllm_gate."""
     
     keys: list[KeyConfig] = field(default_factory=list)
     
@@ -74,7 +74,7 @@ class MAXLLMConfig:
     port: int = 8000
     
     @classmethod
-    def from_file(cls, path: str | Path) -> "MAXLLMConfig":
+    def from_file(cls, path: str | Path) -> "maxllm_gate_config":
         """Load configuration from YAML or JSON file."""
         path = Path(path)
         
@@ -105,7 +105,7 @@ class MAXLLMConfig:
         return cls.from_dict(data)
     
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "MAXLLMConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "maxllm_gate_config":
         """Create from dictionary."""
         keys = []
         
@@ -138,9 +138,9 @@ class MAXLLMConfig:
         )
     
     @classmethod
-    def from_env(cls) -> "MAXLLMConfig":
+    def from_env(cls) -> "maxllm_gate_config":
         """Load configuration from environment variables."""
-        keys_json = os.environ.get("MAXLLM_KEYS", "{}")
+        keys_json = os.environ.get("maxllm_gate_KEYS", "{}")
         
         try:
             keys_data = json.loads(keys_json)
@@ -153,9 +153,9 @@ class MAXLLMConfig:
         
         return cls(
             keys=keys,
-            strategy=os.environ.get("MAXLLM_STRATEGY", "least_utilized"),
-            default_max_tokens=int(os.environ.get("MAXLLM_MAX_TOKENS", "1024")),
-            max_retries=int(os.environ.get("MAXLLM_MAX_RETRIES", "3")),
+            strategy=os.environ.get("maxllm_gate_STRATEGY", "least_utilized"),
+            default_max_tokens=int(os.environ.get("maxllm_gate_MAX_TOKENS", "1024")),
+            max_retries=int(os.environ.get("maxllm_gate_MAX_RETRIES", "3")),
         )
     
     def to_dict(self) -> dict[str, Any]:

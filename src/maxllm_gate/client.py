@@ -1,4 +1,4 @@
-"""MAXLLM Client - Simple SDK interface."""
+"""maxllm_gate Client - Simple SDK interface."""
 
 import asyncio
 import time
@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Generator, AsyncGenerator
 
-from maxllm.config import MAXLLMConfig, KeyConfig
-from maxllm.scheduler import Scheduler
-from maxllm.rate_limiter import RateLimiter
-from maxllm.validation import validate_chat_request
+from maxllm_gate.config import maxllm_gate_config, KeyConfig
+from maxllm_gate.scheduler import Scheduler
+from maxllm_gate.rate_limiter import RateLimiter
+from maxllm_gate.validation import validate_chat_request
 
 
 @dataclass
@@ -43,9 +43,9 @@ class Message:
         return {"role": self.role, "content": self.content}
 
 
-class MAXLLM:
+class maxllm_gate:
     """
-    MAXLLM - Intelligent LLM client with built-in rate limiting.
+    maxllm_gate - Intelligent LLM client with built-in rate limiting.
     
     This client automatically:
     - Manages multiple API keys across providers
@@ -56,7 +56,7 @@ class MAXLLM:
     
     Usage:
         # From config file
-        client = MAXLLM.from_config("config.yaml")
+        client = maxllm_gate.from_config("config.yaml")
         
         # Simple chat
         response = client.chat("gpt-4o-mini", "Hello!")
@@ -71,15 +71,15 @@ class MAXLLM:
     
     def __init__(
         self,
-        config: MAXLLMConfig | None = None,
+        config: maxllm_gate_config | None = None,
         keys: list[dict] | None = None,
         **kwargs,
     ):
         """
-        Initialize MAXLLM client.
+        Initialize maxllm_gate client.
         
         Args:
-            config: MAXLLMConfig object
+            config: maxllm_gate_config object
             keys: List of key configurations (alternative to config)
             **kwargs: Additional config options
         """
@@ -87,16 +87,16 @@ class MAXLLM:
             self.config = config
         elif keys is not None:
             key_configs = [KeyConfig.from_dict(k) for k in keys]
-            self.config = MAXLLMConfig(keys=key_configs, **kwargs)
+            self.config = maxllm_gate_config(keys=key_configs, **kwargs)
         else:
-            self.config = MAXLLMConfig(**kwargs)
+            self.config = maxllm_gate_config(**kwargs)
         
         self._rate_limiter = RateLimiter()
         self._scheduler = Scheduler(self.config, self._rate_limiter)
         self._initialized = False
     
     @classmethod
-    def from_config(cls, path: str | Path) -> "MAXLLM":
+    def from_config(cls, path: str | Path) -> "maxllm_gate":
         """
         Create client from config file.
         
@@ -104,15 +104,15 @@ class MAXLLM:
             path: Path to YAML or JSON config file
             
         Returns:
-            Configured MAXLLM client
+            Configured maxllm_gate client
         """
-        config = MAXLLMConfig.from_file(path)
+        config = maxllm_gate_config.from_file(path)
         return cls(config=config)
     
     @classmethod
-    def from_env(cls) -> "MAXLLM":
+    def from_env(cls) -> "maxllm_gate":
         """Create client from environment variables."""
-        config = MAXLLMConfig.from_env()
+        config = maxllm_gate_config.from_env()
         return cls(config=config)
     
     def _ensure_initialized(self) -> None:
@@ -458,7 +458,7 @@ class MAXLLM:
         return self._scheduler.can_accept_request()
     
     def __repr__(self) -> str:
-        return f"MAXLLM(keys={len(self.config.keys)}, strategy={self.config.strategy})"
+        return f"maxllm_gate(keys={len(self.config.keys)}, strategy={self.config.strategy})"
     
     def shutdown(self, timeout: float = 30.0) -> None:
         """
@@ -478,7 +478,7 @@ class MAXLLM:
         except RuntimeError:
             asyncio.run(self._scheduler.shutdown(timeout))
     
-    def __enter__(self) -> "MAXLLM":
+    def __enter__(self) -> "maxllm_gate":
         """Context manager entry."""
         return self
     
@@ -487,12 +487,12 @@ class MAXLLM:
         self.shutdown()
 
 
-class MAXLLMAsync(MAXLLM):
+class maxllm_gate_async(maxllm_gate):
     """
-    Async version of MAXLLM client.
+    Async version of maxllm_gate client.
     
     Usage:
-        async with MAXLLMAsync.from_config("config.yaml") as client:
+        async with maxllm_gate_async.from_config("config.yaml") as client:
             response = await client.chat("gpt-4o-mini", "Hello!")
     """
     
@@ -589,7 +589,7 @@ class MAXLLMAsync(MAXLLM):
         """Async graceful shutdown."""
         await self._scheduler.shutdown(timeout)
     
-    async def __aenter__(self) -> "MAXLLMAsync":
+    async def __aenter__(self) -> "maxllm_gate_async":
         """Async context manager entry."""
         return self
     

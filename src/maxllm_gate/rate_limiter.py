@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from threading import Lock
 from typing import Any
 
-from maxllm.config import KeyConfig
+from maxllm_gate.config import KeyConfig
 
 
 @dataclass

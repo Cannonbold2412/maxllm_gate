@@ -1,19 +1,16 @@
-"""Tests for MAXLLM SDK client."""
+"""Tests for maxllm_gate SDK client."""
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import asyncio
 
-from maxllm import (
-    MAXLLM,
-    MAXLLMAsync,
-    MAXLLMConfig,
-    KeyConfig,
-    ChatResponse,
-    Message,
-    validate_chat_request,
+from maxllm_gate import (
+    maxllm_gate,
 )
-from maxllm.validation import ChatMessage, ChatRequest
+from maxllm_gate.client import ChatResponse, Message
+from maxllm_gate.config import maxllm_gate_config, KeyConfig
+from maxllm_gate.validation import validate_chat_request
+from maxllm_gate.validation import ChatMessage, ChatRequest
 
 
 # =============================================================================
@@ -23,7 +20,7 @@ from maxllm.validation import ChatMessage, ChatRequest
 @pytest.fixture
 def mock_config():
     """Create a test config with mock keys."""
-    return MAXLLMConfig(
+    return maxllm_gate_config(
         keys=[
             KeyConfig(
                 api_key="test-key-1",
@@ -187,18 +184,18 @@ class TestChatMessage:
 # Client Tests
 # =============================================================================
 
-class TestMAXLLMClient:
-    """Tests for sync MAXLLM client."""
+class Testmaxllm_gateClient:
+    """Tests for maxllm_gate client."""
     
     def test_init_with_config(self, mock_config):
         """Client initializes with config object."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         assert len(client.config.keys) == 2
         assert client.config.strategy == "balanced"
     
     def test_init_with_keys_list(self):
         """Client initializes with keys list."""
-        client = MAXLLM(
+        client = maxllm_gate(
             keys=[
                 {
                     "api_key": "test-key",
@@ -211,15 +208,15 @@ class TestMAXLLMClient:
     
     def test_repr(self, mock_config):
         """String representation is correct."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         rep = repr(client)
-        assert "MAXLLM" in rep
+        assert "maxllm_gate" in rep
         assert "keys=2" in rep
         assert "strategy=balanced" in rep
     
     def test_add_key_at_runtime(self, mock_config):
         """Keys can be added at runtime."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         initial_count = len(client.config.keys)
         
         client.add_key(
@@ -230,26 +227,28 @@ class TestMAXLLMClient:
         
         assert len(client.config.keys) == initial_count + 1
     
-    @patch("maxllm.scheduler.litellm.acompletion")
-    def test_chat_sync(self, mock_acompletion, mock_config, mock_litellm_response):
-        """Sync chat works correctly."""
+    @pytest.mark.asyncio
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
+    async def test_chat_sync(self, mock_acompletion, mock_config, mock_litellm_response):
+        """Async chat works correctly."""
         mock_acompletion.return_value = mock_litellm_response
         
-        client = MAXLLM(config=mock_config)
-        response = client.chat("gpt-4o-mini", "Hello!", validate=False)
+        client = maxllm_gate(config=mock_config)
+        response = await client.chat("gpt-4o-mini", "Hello!", validate=False)
         
         assert isinstance(response, ChatResponse)
         assert "Hello" in response.content
         assert response.model == "gpt-4o-mini"
         assert response.usage is not None
     
-    @patch("maxllm.scheduler.litellm.acompletion")
-    def test_chat_with_messages_list(self, mock_acompletion, mock_config, mock_litellm_response):
+    @pytest.mark.asyncio
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
+    async def test_chat_with_messages_list(self, mock_acompletion, mock_config, mock_litellm_response):
         """Chat with message list works."""
         mock_acompletion.return_value = mock_litellm_response
         
-        client = MAXLLM(config=mock_config)
-        response = client.chat(
+        client = maxllm_gate(config=mock_config)
+        response = await client.chat(
             "gpt-4o-mini",
             [
                 {"role": "system", "content": "Be helpful"},
@@ -260,13 +259,14 @@ class TestMAXLLMClient:
         
         assert response.content is not None
     
-    @patch("maxllm.scheduler.litellm.acompletion")
-    def test_chat_with_message_objects(self, mock_acompletion, mock_config, mock_litellm_response):
+    @pytest.mark.asyncio
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
+    async def test_chat_with_message_objects(self, mock_acompletion, mock_config, mock_litellm_response):
         """Chat with Message objects works."""
         mock_acompletion.return_value = mock_litellm_response
         
-        client = MAXLLM(config=mock_config)
-        response = client.chat(
+        client = maxllm_gate(config=mock_config)
+        response = await client.chat(
             "gpt-4o-mini",
             [Message(role="user", content="Hello!")],
             validate=False,
@@ -276,7 +276,7 @@ class TestMAXLLMClient:
     
     def test_status(self, mock_config):
         """Status returns scheduler status."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         # Ensure initialized
         client._ensure_initialized()
         
@@ -286,7 +286,7 @@ class TestMAXLLMClient:
     
     def test_capacity(self, mock_config):
         """Capacity returns rate limiter capacity."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         client._ensure_initialized()
         
         capacity = client.capacity()
@@ -294,7 +294,7 @@ class TestMAXLLMClient:
     
     def test_latency_stats(self, mock_config):
         """Latency returns per-key stats."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         client._ensure_initialized()
         
         latency = client.latency()
@@ -303,7 +303,7 @@ class TestMAXLLMClient:
     
     def test_scores(self, mock_config):
         """Scores returns balanced scores."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         client._ensure_initialized()
         
         scores = client.scores()
@@ -314,24 +314,25 @@ class TestMAXLLMClient:
             assert "total_score" in score_data
             assert "utilization" in score_data
     
-    def test_context_manager(self, mock_config):
-        """Context manager works for graceful shutdown."""
-        with MAXLLM(config=mock_config) as client:
+    @pytest.mark.asyncio
+    async def test_context_manager(self, mock_config):
+        """Async context manager works for graceful shutdown."""
+        async with maxllm_gate(config=mock_config) as client:
             client._ensure_initialized()
             assert len(client.config.keys) == 2
         # Shutdown called automatically
 
 
-class TestMAXLLMAsyncClient:
-    """Tests for async MAXLLM client."""
+class Testmaxllm_gate_asyncClient:
+    """Tests for async maxllm_gate client."""
     
     @pytest.mark.asyncio
-    @patch("maxllm.scheduler.litellm.acompletion")
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
     async def test_async_chat(self, mock_acompletion, mock_config, mock_litellm_response):
         """Async chat works correctly."""
         mock_acompletion.return_value = mock_litellm_response
         
-        client = MAXLLMAsync(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         response = await client.chat("gpt-4o-mini", "Hello!", validate=False)
         
         assert isinstance(response, ChatResponse)
@@ -340,7 +341,7 @@ class TestMAXLLMAsyncClient:
     @pytest.mark.asyncio
     async def test_async_context_manager(self, mock_config):
         """Async context manager works."""
-        async with MAXLLMAsync(config=mock_config) as client:
+        async with maxllm_gate(config=mock_config) as client:
             client._ensure_initialized()
             assert len(client.config.keys) == 2
 
@@ -374,7 +375,7 @@ class TestConfig:
     
     def test_config_from_dict(self):
         """Config loads from dictionary."""
-        config = MAXLLMConfig.from_dict({
+        config = maxllm_gate_config.from_dict({
             "keys": [
                 {
                     "api_key": "test-key",
@@ -406,7 +407,7 @@ class TestRateLimiter:
     
     def test_key_registration(self, mock_config):
         """Keys are properly registered."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         client._ensure_initialized()
         
         capacity = client.capacity()
@@ -415,7 +416,7 @@ class TestRateLimiter:
     
     def test_capacity_tracking(self, mock_config):
         """Capacity is properly tracked."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         client._ensure_initialized()
         
         # Initial capacity should be full
@@ -427,7 +428,7 @@ class TestRateLimiter:
     
     def test_strategy_selection(self, mock_config):
         """Strategy is used for key selection."""
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         client._ensure_initialized()
         
         # With balanced strategy, should select based on score
@@ -448,14 +449,15 @@ class TestRateLimiter:
 class TestIntegration:
     """Integration tests with mocked LLM calls."""
     
-    @patch("maxllm.scheduler.litellm.acompletion")
-    def test_full_request_flow(self, mock_acompletion, mock_config, mock_litellm_response):
+    @pytest.mark.asyncio
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
+    async def test_full_request_flow(self, mock_acompletion, mock_config, mock_litellm_response):
         """Test complete request flow."""
         mock_acompletion.return_value = mock_litellm_response
         
-        with MAXLLM(config=mock_config) as client:
+        async with maxllm_gate(config=mock_config) as client:
             # Make a request
-            response = client.chat(
+            response = await client.chat(
                 model="gpt-4o-mini",
                 messages="Hello!",
                 max_tokens=100,
@@ -474,8 +476,9 @@ class TestIntegration:
             assert call_kwargs["max_tokens"] == 100
             assert call_kwargs["temperature"] == 0.5
     
-    @patch("maxllm.scheduler.litellm.acompletion")
-    def test_retry_on_failure(self, mock_acompletion, mock_config, mock_litellm_response):
+    @pytest.mark.asyncio
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
+    async def test_retry_on_failure(self, mock_acompletion, mock_config, mock_litellm_response):
         """Test retry behavior on transient failures."""
         # Fail twice, then succeed
         mock_acompletion.side_effect = [
@@ -484,21 +487,22 @@ class TestIntegration:
             mock_litellm_response,
         ]
         
-        client = MAXLLM(config=mock_config)
-        response = client.chat("gpt-4o-mini", "Hello!", validate=False)
+        client = maxllm_gate(config=mock_config)
+        response = await client.chat("gpt-4o-mini", "Hello!", validate=False)
         
         assert response.content is not None
         assert mock_acompletion.call_count == 3
     
-    @patch("maxllm.scheduler.litellm.acompletion")
-    def test_provider_prefix(self, mock_acompletion, mock_config, mock_litellm_response):
+    @pytest.mark.asyncio
+    @patch("maxllm_gate.scheduler.litellm.acompletion")
+    async def test_provider_prefix(self, mock_acompletion, mock_config, mock_litellm_response):
         """Test that provider prefixes are added correctly."""
         mock_acompletion.return_value = mock_litellm_response
         
-        client = MAXLLM(config=mock_config)
+        client = maxllm_gate(config=mock_config)
         
         # Request groq model
-        response = client.chat(
+        response = await client.chat(
             model="mixtral-8x7b-32768",
             messages="Hello!",
             validate=False,

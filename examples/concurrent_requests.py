@@ -1,7 +1,7 @@
 """
-Example: Handling concurrent requests with MAXLLM.
+Example: Handling concurrent requests with maxllm_gate.
 
-Demonstrates how MAXLLM handles multiple concurrent requests with:
+Demonstrates how maxllm_gate handles multiple concurrent requests with:
 1. Semaphore-based concurrency control
 2. Rate limit tracking across concurrent calls
 3. Load balancing across multiple keys
@@ -9,36 +9,36 @@ Demonstrates how MAXLLM handles multiple concurrent requests with:
 
 import asyncio
 import time
-from maxllm import MAXLLMAsync, MAXLLMConfig, KeyConfig
+from maxllm_gate import maxllm_gate
 
 
 async def main():
     # Create config with concurrency limit
-    config = MAXLLMConfig(
-        keys=[
-            KeyConfig(
-                api_key="test-key-1",
-                provider="openai",
-                models=["gpt-4o-mini"],
-                tpm_limit=100000,
-                rpm_limit=60,
-            ),
-            KeyConfig(
-                api_key="test-key-2",
-                provider="openai",
-                models=["gpt-4o-mini"],
-                tpm_limit=100000,
-                rpm_limit=60,
-            ),
+    config = {
+        "keys": [
+            {
+                "api_key": "test-key-1",
+                "provider": "openai",
+                "models": ["gpt-4o-mini"],
+                "tpm_limit": 100000,
+                "rpm_limit": 60,
+            },
+            {
+                "api_key": "test-key-2",
+                "provider": "openai",
+                "models": ["gpt-4o-mini"],
+                "tpm_limit": 100000,
+                "rpm_limit": 60,
+            },
         ],
-        strategy="balanced",
-        max_concurrent_requests=10,  # Max 10 parallel requests
-    )
+        "strategy": "balanced",
+        "max_concurrent_requests": 10,  # Max 10 parallel requests
+    }
     
-    async with MAXLLMAsync(config=config) as client:
-        print(f"🚀 MAXLLM Concurrent Request Test")
-        print(f"📊 Config: {len(config.keys)} keys, max {config.max_concurrent_requests} concurrent")
-        print(f"🎯 Strategy: {config.strategy}\n")
+    async with maxllm_gate(keys=config["keys"], strategy=config["strategy"], max_concurrent_requests=config["max_concurrent_requests"]) as client:
+        print(f"🚀 maxllm_gate Concurrent Request Test")
+        print(f"📊 Config: 2 keys, max 10 concurrent")
+        print(f"🎯 Strategy: balanced\n")
         
         # Simulate 20 concurrent requests
         print("Sending 20 concurrent requests...")
@@ -93,7 +93,7 @@ async def main():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("MAXLLM Concurrent Request Handling Demo")
+    print("maxllm_gate Concurrent Request Handling Demo")
     print("=" * 60)
     print()
     

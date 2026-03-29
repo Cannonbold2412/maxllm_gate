@@ -17,7 +17,7 @@ class RedisConfig:
     """Redis connection configuration."""
     
     url: str = "redis://localhost:6379"
-    prefix: str = "maxllm:"
+    prefix: str = "maxllm_gate:"
     state_ttl: int = 120  # TTL for state keys (2 minutes, covers rate window)
     lock_timeout: int = 5  # Distributed lock timeout
     connection_timeout: float = 5.0
@@ -26,7 +26,7 @@ class RedisConfig:
 
 class RedisBackend:
     """
-    Redis backend for distributed MAXLLM state.
+    Redis backend for distributed maxllm_gate state.
     
     Provides:
     - Distributed rate limit state (tokens used, request counts)

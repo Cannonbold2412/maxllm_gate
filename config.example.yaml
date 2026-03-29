@@ -1,4 +1,4 @@
-# MAXLLM Configuration File
+# maxllm_gate Configuration File
 # Copy to config.yaml and add your API keys
 
 keys:
@@ -49,7 +49,7 @@ strategy: least_utilized
 # Defaults
 default_max_tokens: 1024
 default_temperature: 0.7
-token_buffer: 1.1
+token_buffer: 1.2
 
 # Retry settings
 max_retries: 3

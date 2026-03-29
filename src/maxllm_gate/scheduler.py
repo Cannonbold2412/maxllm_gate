@@ -1,4 +1,4 @@
-"""MAXLLM Scheduler - orchestrates requests with edge case handling."""
+"""maxllm_gate Scheduler - orchestrates requests with edge case handling."""
 
 import asyncio
 import signal
@@ -8,8 +8,8 @@ from typing import Any, AsyncGenerator
 import tiktoken
 import litellm
 
-from maxllm.config import MAXLLMConfig
-from maxllm.rate_limiter import RateLimiter
+from maxllm_gate.config import maxllm_gate_config
+from maxllm_gate.rate_limiter import RateLimiter
 
 
 class CapacityExhaustedError(Exception):
@@ -84,7 +84,7 @@ class GracefulShutdown:
 class Scheduler:
     """Schedules and executes LLM requests with edge case handling."""
     
-    def __init__(self, config: MAXLLMConfig, rate_limiter: RateLimiter):
+    def __init__(self, config: maxllm_gate_config, rate_limiter: RateLimiter):
         self.config = config
         self.rate_limiter = rate_limiter
         self._encoders: dict[str, tiktoken.Encoding] = {}

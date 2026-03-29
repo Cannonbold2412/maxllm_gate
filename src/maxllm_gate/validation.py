@@ -1,6 +1,6 @@
 """Input validation using Pydantic models."""
 
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
@@ -111,7 +111,7 @@ class KeyConfigModel(BaseModel):
 
 
 class ConfigModel(BaseModel):
-    """Validated MAXLLM configuration."""
+    """Validated maxllm_gate configuration."""
     
     keys: list[KeyConfigModel] = Field(default_factory=list)
     strategy: Literal[
@@ -127,7 +127,7 @@ class ConfigModel(BaseModel):
     
     # Redis settings
     redis_url: str | None = None
-    redis_prefix: str = "maxllm:"
+    redis_prefix: str = "maxllm_gate:"
     
     @model_validator(mode="after")
     def validate_delays(self) -> "ConfigModel":
@@ -138,10 +138,10 @@ class ConfigModel(BaseModel):
 
 def validate_chat_request(
     model: str,
-    messages: str | list[dict[str, str]],
+    messages: str | list[dict[str, Any]],
     max_tokens: int | None = None,
     temperature: float | None = None,
-    priority: str = "medium",
+    priority: Literal["high", "medium", "low"] = "medium",
     timeout: float = 120.0,
     **kwargs,
 ) -> ChatRequest:
@@ -169,8 +169,8 @@ def validate_chat_request(
     else:
         msg_list = messages
     
-    # Build request
-    chat_messages = [ChatMessage(**m) for m in msg_list]
+    # Build request - cast to Any to satisfy type checker with dynamic dict unpacking
+    chat_messages = [ChatMessage(**cast(Any, m)) for m in msg_list]
     
     return ChatRequest(
         model=model,

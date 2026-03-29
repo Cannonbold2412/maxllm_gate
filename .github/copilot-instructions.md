@@ -1,19 +1,19 @@
-# MAXLLM Copilot Instructions
+# maxllm_gate Copilot Instructions
 
 ## Project Overview
 
-MAXLLM is a production-ready LLM client that sits on top of LiteLLM, providing intelligent rate limiting, smart routing, and distributed state support. It manages multiple API keys across providers (OpenAI, Groq, OpenRouter, etc.) to maximize throughput and prevent 429 errors.
+maxllm_gate is a production-ready LLM client that sits on top of LiteLLM, providing intelligent rate limiting, smart routing, and distributed state support. It manages multiple API keys across providers (OpenAI, Groq, OpenRouter, etc.) to maximize throughput and prevent 429 errors.
 
 ### Architecture
 
 The project has two main components:
 
-1. **SDK Client (`src/maxllm/`)** - Simple Python client library for end users
+1. **SDK Client (`src/maxllm_gate_gate/`)** - Simple Python client library for end users
 2. **Scheduler Server (`src/llm_scheduler/`)** - Optional FastAPI gateway with advanced scheduling
 
 **Request Flow:**
 ```
-User → MAXLLM Client → Scheduler → Rate Limiter → LiteLLM → Provider API
+User → maxllm_gate Client → Scheduler → Rate Limiter → LiteLLM → Provider API
                       ↓
                  Queue Manager (if capacity exhausted)
 ```
@@ -28,7 +28,7 @@ User → MAXLLM Client → Scheduler → Rate Limiter → LiteLLM → Provider A
 ### Key Concepts
 
 **Dual Package Structure:**
-- `maxllm` - The SDK package that users import (`from maxllm import MAXLLM`)
+- `maxllm` - The SDK package that users import (`from maxllm_gate import maxllm_gate`)
 - `llm_scheduler` - Server/API package for FastAPI gateway mode
 - Both packages are in `src/` and installed together via `pyproject.toml`
 
@@ -91,7 +91,7 @@ mypy src/
 ### Running the Server
 ```bash
 # Start FastAPI server (requires [server] extras)
-maxllm-server
+maxllm_gate-server
 
 # Or with uvicorn directly
 uvicorn llm_scheduler.main:app --host 0.0.0.0 --port 8000
@@ -123,9 +123,9 @@ Both use similar structure but serve different purposes. Don't confuse them when
 **Config Loading Priority:**
 ```python
 # SDK client
-MAXLLM.from_config("config.yaml")  # YAML file
-MAXLLM.from_env()                  # Environment variables
-MAXLLM(keys=[...])                 # Direct dict
+maxllm_gate.from_config("config.yaml")  # YAML file
+maxllm_gate.from_env()                  # Environment variables
+maxllm_gate(keys=[...])                 # Direct dict
 
 # Server uses Pydantic Settings
 settings.get_api_keys()  # Reads from env vars or config
@@ -133,7 +133,7 @@ settings.get_api_keys()  # Reads from env vars or config
 
 ### Async/Sync Duality
 
-The SDK provides both sync (`MAXLLM`) and async (`MAXLLMAsync`) clients. Key patterns:
+The SDK provides both sync (`maxllm_gate`) and async (`maxllm_gate_async`) clients. Key patterns:
 
 - Async is preferred for production/high-throughput scenarios
 - Sync wrapper uses `asyncio.run()` internally
@@ -222,7 +222,7 @@ Use `TokenBucket` directly to test token bucket logic without full scheduler ove
 For distributed deployments, rate limit state can be stored in Redis:
 
 ```python
-# src/maxllm/redis_backend.py
+# src/maxllm_gate_gate/redis_backend.py
 limiter = HybridRateLimiter(
     redis_url="redis://localhost:6379",
     fallback_to_memory=True,  # Graceful degradation
@@ -250,10 +250,10 @@ limiter = HybridRateLimiter(
 
 ### Common Pitfalls
 
-1. **Don't confuse the two config systems** - SDK uses `MAXLLMConfig`, server uses Pydantic Settings
+1. **Don't confuse the two config systems** - SDK uses `maxllm_gate_config`, server uses Pydantic Settings
 2. **Token estimation is approximate** - Always add buffer, never assume exact count
 3. **Strategies return None if no capacity** - Handle this case (queue or fail)
-4. **Context managers are important** - Use `with MAXLLM.from_config(...)` for graceful shutdown
+4. **Context managers are important** - Use `with maxllm_gate.from_config(...)` for graceful shutdown
 5. **Test isolation** - Each test should use fresh scheduler instance (see fixtures)
 6. **Provider-specific quirks** - Some providers need special handling in LiteLLM (check docs)
 
@@ -262,7 +262,7 @@ limiter = HybridRateLimiter(
 ```
 src/
   maxllm/           # SDK package (public API)
-    client.py       # User-facing MAXLLM/MAXLLMAsync classes
+    client.py       # User-facing maxllm_gate/maxllm_gate_async classes
     scheduler.py    # Client-side scheduler
     config.py       # SDK config models
     rate_limiter.py # Rate limiting for SDK
@@ -289,7 +289,7 @@ src/
 
 ```bash
 # For SDK usage
-MAXLLM_KEYS='{"groq-1": {...}, "openai-1": {...}}'
+maxllm_gate_KEYS='{"groq-1": {...}, "openai-1": {...}}'
 
 # For server mode (see llm_scheduler/config.py)
 HOST=0.0.0.0
