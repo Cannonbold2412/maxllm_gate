@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "maxllm"
+version = "0.2.0"
+description = "MAXLLM - Intelligent LLM client with built-in rate limiting. Maximizes throughput and prevents 429 errors."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "LLM Scheduler Contributors" }
+]
+keywords = [
+    "llm",
+    "rate-limiting",
+    "scheduler",
+    "litellm",
+    "openai",
+    "groq",
+    "maxllm",
+    "api-gateway"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "litellm>=1.30.0",
+    "tiktoken>=0.6.0",
+    "pydantic>=2.5.0",
+    "httpx>=0.26.0",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic-settings>=2.1.0",
+    "prometheus-client>=0.19.0",
+    "structlog>=24.1.0",
+    "tenacity>=8.2.0",
+    "python-dotenv>=1.0.0",
+]
+yaml = [
+    "pyyaml>=6.0.0",
+]
+redis = [
+    "redis>=5.0.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8.0",
+]
+all = [
+    "maxllm[server,yaml,redis]",
+]
+
+[project.scripts]
+maxllm-server = "llm_scheduler.main:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/maxllm"
+Documentation = "https://github.com/yourusername/maxllm#readme"
+Repository = "https://github.com/yourusername/maxllm"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/maxllm", "src/llm_scheduler"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

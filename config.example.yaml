@@ -1,0 +1,60 @@
+# MAXLLM Configuration File
+# Copy to config.yaml and add your API keys
+
+keys:
+  # Groq - Fast inference, free tier
+  groq-1:
+    api_key: "gsk_your_groq_api_key_here"
+    provider: groq
+    models:
+      - llama-3.1-70b-versatile
+      - llama-3.1-8b-instant
+      - mixtral-8x7b-32768
+    tpm_limit: 30000
+    rpm_limit: 30
+
+  # Second Groq key for more capacity
+  groq-2:
+    api_key: "gsk_your_second_groq_key"
+    provider: groq
+    models:
+      - llama-3.1-70b-versatile
+      - mixtral-8x7b-32768
+    tpm_limit: 30000
+    rpm_limit: 30
+
+  # OpenRouter - Access to many models
+  openrouter-1:
+    api_key: "sk-or-your_openrouter_key"
+    provider: openrouter
+    models:
+      - anthropic/claude-3-haiku
+      - meta-llama/llama-3-70b-instruct
+    tpm_limit: 100000
+    rpm_limit: 200
+
+  # OpenAI
+  openai-1:
+    api_key: "sk-your_openai_key"
+    provider: openai
+    models:
+      - gpt-4o-mini
+      - gpt-4o
+    tpm_limit: 90000
+    rpm_limit: 500
+
+# Scheduling strategy: least_utilized | round_robin | token_aware
+strategy: least_utilized
+
+# Defaults
+default_max_tokens: 1024
+default_temperature: 0.7
+token_buffer: 1.1
+
+# Retry settings
+max_retries: 3
+retry_base_delay: 1.0
+retry_max_delay: 60.0
+
+# Queue settings
+max_queue_size: 10000
